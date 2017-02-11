@@ -1,3 +1,5 @@
+import logging
+
 import snimpy
 
 
@@ -31,6 +33,7 @@ class Outlet(object):
 
         Accepts a boolean or an 'on'/'off'/'reboot' string."""
         state = self._states.get(state, state)
+        logging.info("setting %s to %s", self.name, state)
         self.manager.outletControlAction[self.index] = state
 
     def reboot(self):
@@ -46,8 +49,11 @@ class Sentry(dict):
         'privprotocol': 'DES',
     }
 
+    # ftp://ftp.servertech.com/Pub/SNMP/sentry3/Sentry3.mib
+    _mibs = ['/usr/share/snmp/mibs/Sentry3-MIB.txt']
+
     def __init__(self, *args, **kwargs):
-        for mib in kwargs.pop('mibs', []):
+        for mib in kwargs.pop('mibs', self._mibs):
             snimpy.manager.load(mib)
         kwargs = dict(self._defaults, **kwargs)
         password = kwargs.pop('password', None)
@@ -65,3 +71,8 @@ class Sentry(dict):
         for index in self.manager.outletID:
             outlet = Outlet(self.manager, index)
             self[outlet.name] = outlet
+        logging.info(
+            "found %d outlets: %s",
+            len(self),
+            ", ".join(sorted(self.keys()))
+        )

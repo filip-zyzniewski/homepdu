@@ -1,20 +1,26 @@
-import homepdu.sentry
+import logging
+
 import snimpy.manager
 
-# ftp://ftp.servertech.com/Pub/SNMP/sentry3/Sentry3.mib
-mibs = ['/usr/share/snmp/mibs/Sentry3-MIB.txt']
+import homepdu.dpms
+import homepdu.sentry
+import homepdu.sink
 
 passwd = ''
 
 
 def main():
-    for m in mibs:
-        snimpy.manager.load(m)
-
+    logging.getLogger().setLevel(logging.INFO)
     sentry = homepdu.sentry.Sentry(
         host='pdu',
         secname='rw',
         password=passwd,
-        mibs=mibs,
     )
-    print(sentry.amplifier.state())
+
+    dpms = (
+        lambda: sentry.screen.set(s) for s in
+        homepdu.dpms.poll('card0-DVI-D-1')
+    )
+
+    for c in homepdu.sink.sink(dpms):
+        c()
