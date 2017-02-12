@@ -1,13 +1,17 @@
+'Provides a funciton draining multiple iterables in separate threads.'
+
 import threading
 import queue
 
 
-def _drain(iterable, queue):
+def _drain(iterable, que):
     for i in iterable:
-        queue.put(i)
+        que.put(i)
 
 
 class _ThreadManager(object):
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, *threads):
         self.threads = threads
 
@@ -21,18 +25,21 @@ class _ThreadManager(object):
 
 
 def funnel(*iterables):
-    """Drains iterables in separate threads and funnels their outputs.
+    """Drains iterables in separate threads and funnels their outputs together.
 
     Args:
-        *iterables: iterables to drain
+        iterables: iterables to drain
 
     Yields:
         items yielded by iterables, FIFO.
     """
 
-    q = queue.Queue(maxsize=1)
-    threads = [threading.Thread(target=_drain, args=(i, q)) for i in iterables]
+    que = queue.Queue(maxsize=1)
+    threads = [
+        threading.Thread(target=_drain, args=(i, que))
+        for i in iterables
+    ]
 
     with _ThreadManager(*threads):
         while True:
-            yield q.get()
+            yield que.get()

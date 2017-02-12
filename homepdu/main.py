@@ -1,6 +1,5 @@
+'Provides the entry point of the homepdu service.'
 import logging
-
-import snimpy.manager
 
 import homepdu.dev
 import homepdu.sysfs
@@ -8,19 +7,18 @@ import homepdu.sentry
 import homepdu.funnel
 import homepdu.refcnt
 
-passwd = ''
-
-
-dpms = '/sys/class/drm/card0-DVI-D-1/dpms'
-sound = '/dev/snd/pcmC0D0p'
+PASSWD = ''
+DPMS = '/sys/class/drm/card0-DVI-D-1/dpms'
+SOUND = '/dev/snd/pcmC0D0p'
 
 
 def main():
+    'Entry point of the homepdu service.'
     logging.getLogger().setLevel(logging.DEBUG)
     sentry = homepdu.sentry.Sentry(
         host='pdu',
         secname='rw',
-        password=passwd,
+        password=PASSWD,
     )
 
     events = homepdu.funnel.funnel(
@@ -30,17 +28,17 @@ def main():
                 by=fn,
                 used=used
             ) for fn, used in
-            homepdu.dev.watch(sound)
+            homepdu.dev.watch(SOUND)
         ),
         (
             homepdu.refcnt.Ref(
                 name='screen',
-                by=dpms,
+                by=DPMS,
                 used=state.lower() == 'on'
             ) for state in
-            homepdu.sysfs.poll(dpms)
+            homepdu.sysfs.poll(DPMS)
         )
     )
 
-    for ref in homepdu.refcnt.RefCounter(events):
+    for ref in homepdu.refcnt.ref_counter(events):
         sentry[ref.name].set(ref.used)

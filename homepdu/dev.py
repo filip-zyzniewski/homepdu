@@ -1,11 +1,13 @@
+'Provides usage info based on open/close operations on device files.'
+
 import logging
 import pyinotify
 
-import homepdu.refcnt
-
-
 class _EventHandler(pyinotify.ProcessEvent):
+    # pylint: disable=invalid-name
+
     mask = (
+        # pylint: disable=no-member
         pyinotify.IN_OPEN |
         pyinotify.IN_CLOSE_WRITE |
         pyinotify.IN_CLOSE_NOWRITE
@@ -16,33 +18,47 @@ class _EventHandler(pyinotify.ProcessEvent):
         super(_EventHandler, self).__init__()
 
     def process_IN_OPEN(self, event):
-        fn = event.pathname
-        logging.debug('accessed: %s', fn)
-        self.usage[fn] = True
+        'Handler for the IN_OPEN event.'
+        logging.debug('accessed: %s', event.pathname)
+        self.usage[event.pathname] = True
 
     def process_IN_CLOSE_WRITE(self, event):
-        fn = event.pathname
-        logging.debug('closed: %s', fn)
-        self.usage[fn] = False
+        'Handler for the IN_CLOSE_WRITE event.'
+        logging.debug('closed: %s', event.pathname)
+        self.usage[event.pathname] = False
 
     process_IN_CLOSE_NOWRITE = process_IN_CLOSE_WRITE
 
     def events(self):
+        """Flushes registered events.
+
+        Yields:
+            (path, used) pairs (see watch).
+        """
         while self.usage:
             yield self.usage.popitem()
 
 
-def watch(*fns):
-    wm = pyinotify.WatchManager()
-    eh = _EventHandler()
-    notifier = pyinotify.Notifier(wm, eh)
+def watch(*paths):
+    """Reports usage of passed device files.
 
-    logging.info('watching: %s', ', '.join(fns))
-    wm.add_watch(list(fns), eh.mask)
+    Args:
+        paths: names of the files to watch
+
+    Yields:
+        (path, used) pairs, where used is True for a file that has
+        been opened and False for a file that has been closed.
+    """
+    manager = pyinotify.WatchManager()
+    handler = _EventHandler()
+    notifier = pyinotify.Notifier(manager, handler)
+
+    logging.info('watching: %s', ', '.join(paths))
+    manager.add_watch(list(paths), handler.mask)
 
     while True:
         notifier.process_events()
-        for e in eh.events():
-            yield e
+        for event in handler.events():
+            yield event
         if notifier.check_events():
             notifier.read_events()
