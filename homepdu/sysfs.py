@@ -14,12 +14,12 @@ def poll(fn, interval=1):
 
     old = None
     with open(fn) as f:
-        logging.info("polling contents of %s every %s seconds", fn, interval)
+        logging.info('polling contents of %s every %s seconds', fn, interval)
         while True:
             f.seek(0)
             state = f.read().strip()
             if state != old:
-                logging.info("%s went from %s to %s", fn, old, state)
+                logging.info('%s went from %s to %s', fn, old, state)
                 yield state
             old = state
             time.sleep(interval)

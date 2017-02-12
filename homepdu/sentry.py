@@ -4,7 +4,7 @@ import snimpy
 
 
 class Outlet(object):
-    "Represents a single Sentry output."
+    'Represents a single Sentry output.'
     _states = {
         True: 'on',
         False: 'off',
@@ -17,23 +17,23 @@ class Outlet(object):
         self.name = self.manager.outletName.get(index, id)
 
     def state(self):
-        "Determines whether the output is on."
+        'Determines whether the output is on.'
         return bool(self.manager.outletStatus[self.index])
 
     def on(self):
-        "Turns the output on."
+        'Turns the output on.'
         self.set(True)
 
     def off(self):
-        "Turns the output off."
+        'Turns the output off.'
         self.set(False)
 
     def set(self, state):
-        """"Sets the desired output state.
+        """Sets the desired output state.
 
         Accepts a boolean or an 'on'/'off'/'reboot' string."""
         state = self._states.get(state, state)
-        logging.info("setting %s to %s", self.name, state)
+        logging.info('setting %s to %s', self.name, state)
         self.manager.outletControlAction[self.index] = state
 
     def reboot(self):
@@ -41,7 +41,7 @@ class Outlet(object):
 
 
 class Sentry(dict):
-    "Represents a Server Technology Sentry PDU unit."
+    'Represents a Server Technology Sentry PDU unit.'
 
     _defaults = {
         'version': 3,
@@ -66,13 +66,13 @@ class Sentry(dict):
     __getattr__ = dict.__getitem__
 
     def reload(self):
-        "Reloats the outlet information from the unit."
+        'Reloats the outlet information from the unit.'
         self.clear()
         for index in self.manager.outletID:
             outlet = Outlet(self.manager, index)
             self[outlet.name] = outlet
         logging.info(
-            "found %d outlets: %s",
+            'found %d outlets: %s',
             len(self),
-            ", ".join(sorted(self.keys()))
+            ', '.join(sorted(self.keys()))
         )
