@@ -4,7 +4,6 @@ import pyinotify
 import homepdu.refcnt
 
 
-
 class _EventHandler(pyinotify.ProcessEvent):
     mask = (
         pyinotify.IN_OPEN |
@@ -33,7 +32,6 @@ class _EventHandler(pyinotify.ProcessEvent):
             yield self.usage.popitem()
 
 
-
 def watch(*fns):
     wm = pyinotify.WatchManager()
     eh = _EventHandler()
@@ -48,4 +46,3 @@ def watch(*fns):
             yield e
         if notifier.check_events():
             notifier.read_events()
-

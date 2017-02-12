@@ -14,6 +14,7 @@ passwd = ''
 dpms = '/sys/class/drm/card0-DVI-D-1/dpms'
 sound = '/dev/snd/pcmC0D0p'
 
+
 def main():
     logging.getLogger().setLevel(logging.DEBUG)
     sentry = homepdu.sentry.Sentry(

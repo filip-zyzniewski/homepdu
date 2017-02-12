@@ -1,8 +1,9 @@
 import logging
 import time
 
+
 def poll(fn, interval=1):
-    """Detects changes in a sysfs file. 
+    """Detects changes in a sysfs file.
 
     Args:
         fn: either aabsolute path to a sysfs file,

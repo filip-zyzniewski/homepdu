@@ -4,6 +4,7 @@ import logging
 Ref = collections.namedtuple('Ref', ['name', 'by', 'used'])
 Ref.replace = Ref._replace
 
+
 def RefCounter(source):
     uses = collections.defaultdict(set)
     for ref in source:
