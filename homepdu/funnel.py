@@ -20,8 +20,8 @@ class _ThreadManager(object):
             thread.join()
 
 
-def sink(*iterables):
-    """Drains iterables in separate threads.
+def funnel(*iterables):
+    """Drains iterables in separate threads and funnels their outputs.
 
     Args:
         *iterables: iterables to drain
