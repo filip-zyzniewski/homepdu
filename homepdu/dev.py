@@ -3,12 +3,17 @@ import pyinotify
 
 import homepdu.refcnt
 
-_events = pyinotify.IN_OPEN | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_CLOSE_NOWRITE
 
 
 class _EventHandler(pyinotify.ProcessEvent):
-    def __init__(self, usage):
-        self.usage = usage
+    mask = (
+        pyinotify.IN_OPEN |
+        pyinotify.IN_CLOSE_WRITE |
+        pyinotify.IN_CLOSE_NOWRITE
+    )
+
+    def __init__(self):
+        self.usage = {}
         super(_EventHandler, self).__init__()
 
     def process_IN_OPEN(self, event):
@@ -23,19 +28,24 @@ class _EventHandler(pyinotify.ProcessEvent):
 
     process_IN_CLOSE_NOWRITE = process_IN_CLOSE_WRITE
 
+    def events(self):
+        while self.usage:
+            yield self.usage.popitem()
+
+
 
 def watch(*fns):
     wm = pyinotify.WatchManager()
-    usage = {}
-    notifier = pyinotify.Notifier(wm, _EventHandler(usage))
+    eh = _EventHandler()
+    notifier = pyinotify.Notifier(wm, eh)
 
     logging.info('watching: %s', ', '.join(fns))
-    wm.add_watch(list(fns), _events)
+    wm.add_watch(list(fns), eh.mask)
 
     while True:
         notifier.process_events()
-        while usage:
-            yield usage.popitem()
+        for e in eh.events():
+            yield e
         if notifier.check_events():
             notifier.read_events()
 
